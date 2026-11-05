@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - Smart Placement Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">Smart Placement Assistant</h1>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="questions.html">Questions</a></li>
+                <li><a href="progress.html">Progress</a></li>
+                <li><a href="chatbot.html" class="active">Chatbot</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="page-header">
+            <h2>AI Assistant</h2>
+            <p>Ask me anything about Python, REST APIs, FastAPI, MySQL, or interview preparation</p>
+        </section>
+
+        <div class="chatbot-info">
+            <p><strong>💡 Tip:</strong> This is a rule-based chatbot with predefined responses. Try asking about:</p>
+            <ul>
+                <li>What is Python?</li>
+                <li>How do REST APIs work?</li>
+                <li>What is FastAPI?</li>
+                <li>Explain MySQL databases</li>
+                <li>Interview preparation tips</li>
+            </ul>
+        </div>
+
+        <section class="chat-container">
+            <div id="chatMessages" class="chat-messages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <strong>Assistant:</strong>
+                        <p>Hello! I'm your Smart Placement Preparation Assistant. I can help you with questions about Python, REST APIs, FastAPI, MySQL, and technical interview preparation. How can I assist you today?</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <textarea 
+                    id="chatInput" 
+                    placeholder="Type your question here..." 
+                    rows="2"
+                    onkeypress="handleKeyPress(event)"
+                ></textarea>
+                <button id="sendButton" class="btn btn-primary" onclick="sendMessage()">
+                    Send
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Smart Placement Preparation Assistant</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        function handleKeyPress(event) {
+            // Send message on Ctrl+Enter or Cmd+Enter
+            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            const sendButton = document.getElementById('sendButton');
+
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+
+            // Disable input while processing
+            input.disabled = true;
+            sendButton.disabled = true;
+            sendButton.textContent = 'Sending...';
+
+            // Display user message
+            displayMessage(message, 'user');
+
+            // Clear input
+            input.value = '';
+
+            try {
+                // Send to chatbot API
+                const response = await sendChatMessage(message);
+
+                // Display bot response
+                displayMessage(response.response, 'bot');
+            } catch (error) {
+                displayMessage('Sorry, I encountered an error. Please make sure the backend server is running.', 'bot', true);
+                console.error('Error:', error);
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send';
+                input.focus();
+            }
+        }
+
+        function displayMessage(text, sender, isError = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message ${isError ? 'error' : ''}`;
+            
+            const senderLabel = sender === 'user' ? 'You' : 'Assistant';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <strong>${senderLabel}:</strong>
+                    <p>${text}</p>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Focus on input when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('chatInput').focus();
+        });
+    </script>
+</body>
+</html>

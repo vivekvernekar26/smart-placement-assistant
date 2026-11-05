@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questions - Smart Placement Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">Smart Placement Assistant</h1>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="questions.html" class="active">Questions</a></li>
+                <li><a href="progress.html">Progress</a></li>
+                <li><a href="chatbot.html">Chatbot</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="page-header">
+            <h2>Practice Questions</h2>
+            <p>Select a question to view details and submit your solution</p>
+        </section>
+
+        <section class="filters">
+            <div class="filter-group">
+                <label for="categoryFilter">Category:</label>
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="difficultyFilter">Difficulty:</label>
+                <select id="difficultyFilter">
+                    <option value="">All Levels</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                </select>
+            </div>
+            <button class="btn btn-secondary" onclick="applyFilters()">Apply Filters</button>
+        </section>
+
+        <div id="loadingMessage" class="loading">Loading questions...</div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <section id="questionsList" class="questions-grid">
+            <!-- Questions will be loaded here dynamically -->
+        </section>
+
+        <!-- Question Detail Modal -->
+        <div id="questionModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeQuestionModal()">&times;</span>
+                <div id="questionDetail">
+                    <!-- Question details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Smart Placement Preparation Assistant</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        let allQuestions = [];
+        let currentQuestionId = null;
+
+        // Load questions on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadQuestions();
+            await loadCategories();
+        });
+
+        async function loadQuestions() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const questionsList = document.getElementById('questionsList');
+
+            try {
+                loadingMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+
+                allQuestions = await fetchQuestions();
+                displayQuestions(allQuestions);
+
+                loadingMessage.style.display = 'none';
+            } catch (error) {
+                loadingMessage.style.display = 'none';
+                errorMessage.textContent = 'Failed to load questions. Please check if the backend server is running.';
+                errorMessage.style.display = 'block';
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadCategories() {
+            const categoryFilter = document.getElementById('categoryFilter');
+            const categories = [...new Set(allQuestions.map(q => q.category))];
+            
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        function displayQuestions(questions) {
+            const questionsList = document.getElementById('questionsList');
+            questionsList.innerHTML = '';
+
+            if (questions.length === 0) {
+                questionsList.innerHTML = '<p class="no-results">No questions found matching your criteria.</p>';
+                return;
+            }
+
+            questions.forEach(question => {
+                const questionCard = document.createElement('div');
+                questionCard.className = 'question-card';
+                questionCard.innerHTML = `
+                    <div class="question-header">
+                        <h3>${question.title}</h3>
+                        <span class="badge badge-${question.difficulty.toLowerCase()}">${question.difficulty}</span>
+                    </div>
+                    <p class="question-category">Category: ${question.category}</p>
+                    <button class="btn btn-primary" onclick="viewQuestion(${question.question_id})">View Details</button>
+                `;
+                questionsList.appendChild(questionCard);
+            });
+        }
+
+        async function applyFilters() {
+            const category = document.getElementById('categoryFilter').value;
+            const difficulty = document.getElementById('difficultyFilter').value;
+
+            let filtered = allQuestions;
+
+            if (category) {
+                filtered = filtered.filter(q => q.category === category);
+            }
+            if (difficulty) {
+                filtered = filtered.filter(q => q.difficulty === difficulty);
+            }
+
+            displayQuestions(filtered);
+        }
+
+        async function viewQuestion(questionId) {
+            currentQuestionId = questionId;
+            const modal = document.getElementById('questionModal');
+            const questionDetail = document.getElementById('questionDetail');
+
+            try {
+                const question = await fetchQuestion(questionId);
+                
+                questionDetail.innerHTML = `
+                    <h2>${question.title}</h2>
+                    <div class="question-meta">
+                        <span class="badge badge-${question.difficulty.toLowerCase()}">${question.difficulty}</span>
+                        <span class="category-tag">${question.category}</span>
+                    </div>
+                    <div class="question-content">
+                        <h3>Description</h3>
+                        <p>${question.description}</p>
+                        
+                        ${question.sample_input ? `
+                            <h3>Sample Input</h3>
+                            <pre>${question.sample_input}</pre>
+                        ` : ''}
+                        
+                        ${question.expected_output ? `
+                            <h3>Expected Output</h3>
+                            <pre>${question.expected_output}</pre>
+                        ` : ''}
+                    </div>
+                    <div class="attempt-form">
+                        <h3>Submit Your Solution</h3>
+                        <textarea id="submittedAnswer" placeholder="Enter your solution here..." rows="6"></textarea>
+                        <div class="form-group">
+                            <label for="attemptScore">Score (0-100):</label>
+                            <input type="number" id="attemptScore" min="0" max="100" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="attemptCompleted"> Mark as completed
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="submitAttempt()">Submit Attempt</button>
+                    </div>
+                `;
+                
+                modal.style.display = 'block';
+            } catch (error) {
+                alert('Failed to load question details');
+                console.error('Error:', error);
+            }
+        }
+
+        function closeQuestionModal() {
+            document.getElementById('questionModal').style.display = 'none';
+        }
+
+        async function submitAttempt() {
+            const answer = document.getElementById('submittedAnswer').value;
+            const score = parseFloat(document.getElementById('attemptScore').value);
+            const completed = document.getElementById('attemptCompleted').checked;
+
+            if (!answer.trim()) {
+                alert('Please enter your solution before submitting');
+                return;
+            }
+
+            try {
+                const attempt = await createAttempt({
+                    student_id: 1, // Demo student ID
+                    question_id: currentQuestionId,
+                    submitted_answer: answer,
+                    score: score,
+                    completed: completed
+                });
+
+                alert('Attempt submitted successfully!');
+                closeQuestionModal();
+            } catch (error) {
+                alert('Failed to submit attempt. Please try again.');
+                console.error('Error:', error);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('questionModal');
+            if (event.target == modal) {
+                closeQuestionModal();
+            }
+        }
+    </script>
+</body>
+</html>

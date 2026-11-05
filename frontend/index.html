@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Placement Preparation Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">Smart Placement Assistant</h1>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="questions.html">Questions</a></li>
+                <li><a href="progress.html">Progress</a></li>
+                <li><a href="chatbot.html">Chatbot</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="hero">
+            <h2>Welcome to Smart Placement Preparation Assistant</h2>
+            <p class="subtitle">Your comprehensive platform for technical interview preparation</p>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <h3>Practice Questions</h3>
+                <p>Browse and solve a wide range of Python programming questions covering strings, lists, dictionaries, and more.</p>
+                <a href="questions.html" class="btn btn-primary">View Questions</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Track Progress</h3>
+                <p>Monitor your learning journey with detailed statistics on attempts, scores, and completed questions.</p>
+                <a href="progress.html" class="btn btn-primary">View Progress</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Chatbot</h3>
+                <p>Get instant answers to your questions about Python, REST APIs, FastAPI, MySQL, and interview tips.</p>
+                <a href="chatbot.html" class="btn btn-primary">Chat Now</a>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <h3>Why Use This Platform?</h3>
+            <ul class="benefits-list">
+                <li>✅ Structured learning path for technical interviews</li>
+                <li>✅ Questions categorized by topic and difficulty</li>
+                <li>✅ Track your progress and identify areas for improvement</li>
+                <li>✅ Get instant help from our intelligent chatbot</li>
+                <li>✅ Practice at your own pace, anytime, anywhere</li>
+            </ul>
+        </section>
+
+        <section class="quick-stats" id="quickStats">
+            <h3>Platform Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalQuestions">-</div>
+                    <div class="stat-label">Total Questions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="categories">-</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="difficultyLevels">3</div>
+                    <div class="stat-label">Difficulty Levels</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Smart Placement Preparation Assistant | Built with FastAPI, MySQL & JavaScript</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Load platform statistics
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const questions = await fetchQuestions();
+                document.getElementById('totalQuestions').textContent = questions.length;
+                
+                const categories = [...new Set(questions.map(q => q.category))];
+                document.getElementById('categories').textContent = categories.length;
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        });
+    </script>
+</body>
+</html>

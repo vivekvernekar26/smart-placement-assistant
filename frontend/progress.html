@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress - Smart Placement Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">Smart Placement Assistant</h1>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="questions.html">Questions</a></li>
+                <li><a href="progress.html" class="active">Progress</a></li>
+                <li><a href="chatbot.html">Chatbot</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="page-header">
+            <h2>Your Progress</h2>
+            <p>Track your learning journey and performance</p>
+        </section>
+
+        <div id="loadingMessage" class="loading">Loading progress data...</div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <section id="progressStats" class="progress-section" style="display: none;">
+            <h3>Overall Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalAttempts">0</div>
+                    <div class="stat-label">Total Attempts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completedQuestions">0</div>
+                    <div class="stat-label">Completed Questions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="averageScore">0</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="attemptsHistory" class="attempts-section" style="display: none;">
+            <h3>Attempt History</h3>
+            <div id="attemptsList">
+                <!-- Attempts will be loaded here -->
+            </div>
+        </section>
+
+        <section id="noAttemptsMessage" class="no-attempts" style="display: none;">
+            <div class="empty-state">
+                <h3>No attempts yet</h3>
+                <p>Start practicing questions to see your progress here!</p>
+                <a href="questions.html" class="btn btn-primary">Browse Questions</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Smart Placement Preparation Assistant</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        const STUDENT_ID = 1; // Demo student ID
+
+        // Load progress on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadProgress();
+        });
+
+        async function loadProgress() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const progressStats = document.getElementById('progressStats');
+            const attemptsHistory = document.getElementById('attemptsHistory');
+            const noAttemptsMessage = document.getElementById('noAttemptsMessage');
+
+            try {
+                loadingMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+
+                const progress = await fetchProgress(STUDENT_ID);
+
+                loadingMessage.style.display = 'none';
+
+                if (progress.total_attempts === 0) {
+                    noAttemptsMessage.style.display = 'block';
+                    progressStats.style.display = 'none';
+                    attemptsHistory.style.display = 'none';
+                } else {
+                    noAttemptsMessage.style.display = 'none';
+                    progressStats.style.display = 'block';
+                    attemptsHistory.style.display = 'block';
+
+                    // Update statistics
+                    document.getElementById('totalAttempts').textContent = progress.total_attempts;
+                    document.getElementById('completedQuestions').textContent = progress.completed_questions;
+                    document.getElementById('averageScore').textContent = progress.average_score.toFixed(1) + '%';
+
+                    // Display attempts
+                    displayAttempts(progress.attempts);
+                }
+            } catch (error) {
+                loadingMessage.style.display = 'none';
+                errorMessage.textContent = 'Failed to load progress data. Please check if the backend server is running.';
+                errorMessage.style.display = 'block';
+                console.error('Error:', error);
+            }
+        }
+
+        function displayAttempts(attempts) {
+            const attemptsList = document.getElementById('attemptsList');
+            attemptsList.innerHTML = '';
+
+            attempts.forEach(attempt => {
+                const attemptCard = document.createElement('div');
+                attemptCard.className = 'attempt-card';
+                
+                const attemptDate = new Date(attempt.attempted_at);
+                const formattedDate = attemptDate.toLocaleString();
+
+                attemptCard.innerHTML = `
+                    <div class="attempt-header">
+                        <div>
+                            <h4>${attempt.title}</h4>
+                            <p class="attempt-meta">
+                                <span class="badge badge-${attempt.difficulty.toLowerCase()}">${attempt.difficulty}</span>
+                                <span class="category-tag">${attempt.category}</span>
+                            </p>
+                        </div>
+                        <div class="attempt-score">
+                            <div class="score-value">${attempt.score}%</div>
+                            ${attempt.completed ? '<span class="completed-badge">✓ Completed</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="attempt-details">
+                        <p><strong>Attempted on:</strong> ${formattedDate}</p>
+                        ${attempt.submitted_answer ? `
+                            <details>
+                                <summary>View Submitted Answer</summary>
+                                <pre class="submitted-answer">${attempt.submitted_answer}</pre>
+                            </details>
+                        ` : ''}
+                    </div>
+                `;
+                
+                attemptsList.appendChild(attemptCard);
+            });
+        }
+    </script>
+</body>
+</html>
